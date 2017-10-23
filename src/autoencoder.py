@@ -51,7 +51,7 @@ class Aligned_LSTM_Autoencoder:
         _, adv_loss = gan_loss(logits1, logits2)
         
         # Define losses
-        self.G_loss = (self.rec_loss1 + self.rec_loss2) + self.lambda_g * (adv_loss)
+        self.G_loss = (self.rec_loss1 + self.rec_loss2) - tf.scalar_mul(self.lambda_g, (adv_loss))
         self.D_loss = adv_loss
 
         #Define optimizers
@@ -118,6 +118,9 @@ class Aligned_LSTM_Autoencoder:
                     _, _, summary = sess.run([self.D_train_step, self.G_train_step, self.merged], \
                                 feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
                     
+                    train_writer.add_summary(summary, i)
+
+                    # Print statistics every epoch
                     if i % 1 == 0 and b == 0:
                         D_loss, G_loss = sess.run([self.D_loss, self.G_loss], \
                                 feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
@@ -127,20 +130,20 @@ class Aligned_LSTM_Autoencoder:
                         print("rec_loss1: {0}\n rec_loss2: {1}".format(rec_loss1, rec_loss2))
 
 			
-                    x_gen_i, x_transfered_i = sess.run([self.decoder_output1, self.decoder_output2], \
-                            feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
-                    x_gen_i = np.argmax(x_gen_i, axis=2)
-                    x_transferred_i = np.argmax(x_transferred_i, axis=2)
-                    
-                    print(i)
-                    num_show = 5
-                    show_idx = np.random.choice(x1_batch.shape[0], size=num_show)
-                    print(textify_samples(x1_batch[show_idx]))
-                    print(textify_samples(x_gen_i[show_idx]))
-                    print(textify_samples(x2_batch[show_idx]))
-                    print(textify_samples(x_transferred_i[show_idx]))
-    
-                    saver.save(sess, saved_model_path, global_step=step)
+                        x_gen_i, x_transfered_i = sess.run([self.decoder_output1, self.decoder_output2], \
+                                feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
+                        x_gen_i = np.argmax(x_gen_i, axis=2)
+                        x_transfered_i = np.argmax(x_transfered_i, axis=2)
+                        
+                        print(i)
+                        num_show = 5
+                        show_idx = np.random.choice(x1_batch.shape[0], size=num_show)
+                        print(textify_samples(x1_batch[show_idx], self.encoder))
+                        print(textify_samples(x_gen_i[show_idx], self.encoder))
+                        print(textify_samples(x2_batch[show_idx], self.encoder))
+                        print(textify_samples(x_transfered_i[show_idx], self.encoder))
+        
+                        saver.save(sess, saved_model_path, global_step=step)
 
                     step += batch_size
 

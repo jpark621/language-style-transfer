@@ -128,4 +128,16 @@ def get_solvers(learning_rate=1e-3, beta1=0.5):
     G_solver = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=beta1)
     return D_solver, G_solver
 
-
+def textify_samples(x, enc):
+    x_text = []
+    for sentence in x:
+        minimum = np.min(sentence)
+        if minimum == -1:
+            eos_idx = np.argmin(sentence)
+            x_text.append(sentence[:eos_idx])
+        else:
+            x_text.append(sentence)
+    
+    x_text = [enc.inverse_transform(x_text[i].astype(int)) for i in range(len(x))]
+    x_text = [''.join(list(text)) for text in x_text]
+    return x_text
