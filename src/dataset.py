@@ -5,7 +5,11 @@ from sklearn.preprocessing import LabelEncoder
 import pickle
 import numpy as np
 
-""" Parser functions that parses and pickles the data """
+""" 
+    Parser functions that parses and pickles the data 
+    
+    >>> python3 dataset.py [-c] [source_path1] [source_path2] [pickle_path]
+"""
 
 def read_all_files(dir_path):
     docs = ""
@@ -33,8 +37,6 @@ def one_hot_encode(dataset1, dataset2, max_length=30, char=False):
     X1 = matrify_sentences(sentences1, enc, max_length=max_length)
     X2 = matrify_sentences(sentences2, enc, max_length=max_length)
     classes = enc.classes_
-
-    print(X1)
 
     return X1, X2, classes
     
