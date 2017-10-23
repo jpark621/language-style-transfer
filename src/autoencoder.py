@@ -127,20 +127,20 @@ class Aligned_LSTM_Autoencoder:
                         print("rec_loss1: {0}\n rec_loss2: {1}".format(rec_loss1, rec_loss2))
 
 			
-                        x_gen_i, x_transfered_i = sess.run([self.decoder_output1, self.decoder_output2], \
-                                feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
-	                x_gen_i = np.argmax(x_gen_i, axis=2)
-	                x_transferred_i = np.argmax(x_transferred_i, axis=2)
-	                
-	                print(i)
-	                num_show = 5
-	                show_idx = np.random.choice(x1_batch.shape[0], size=num_show)
-	                print(textify_samples(x1_batch[show_idx]))
-	                print(textify_samples(x_gen_i[show_idx]))
-			print(textify_samples(x2_batch[show_idx]))
-	                print(textify_samples(x_transferred_i[show_idx]))
-	
-	                saver.save(sess, saved_model_path, global_step=step)
+                    x_gen_i, x_transfered_i = sess.run([self.decoder_output1, self.decoder_output2], \
+                            feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
+                    x_gen_i = np.argmax(x_gen_i, axis=2)
+                    x_transferred_i = np.argmax(x_transferred_i, axis=2)
+                    
+                    print(i)
+                    num_show = 5
+                    show_idx = np.random.choice(x1_batch.shape[0], size=num_show)
+                    print(textify_samples(x1_batch[show_idx]))
+                    print(textify_samples(x_gen_i[show_idx]))
+                    print(textify_samples(x2_batch[show_idx]))
+                    print(textify_samples(x_transferred_i[show_idx]))
+    
+                    saver.save(sess, saved_model_path, global_step=step)
 
                     step += batch_size
 
