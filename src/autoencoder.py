@@ -1,3 +1,9 @@
+""" 
+    Class for Aligned Autoencoder
+
+    >>> python3 autoencoder.py [pickle_path]
+"""
+
 import tensorflow as tf
 from sklearn.preprocessing import LabelEncoder
 import pickle
@@ -18,23 +24,23 @@ class Aligned_LSTM_Autoencoder:
         tf.reset_default_graph()
 
         # Build Autoencoder1
-        x1_input = tf.placeholder(tf.int32, [None, None])
-        embedding1 = tf.one_hot(x1_input, vocab_size)
+        self.x1_input = tf.placeholder(tf.int32, [None, None])
+        embedding1 = tf.one_hot(self.x1_input, vocab_size)
 
         self.encoder_output1 = lstm_encoder(embedding1, lstm_units=vocab_size, z_dim=self.z_dim, name='1')
-        decoder_output1 = lstm_decoder_teacher_forced(embedding1, self.encoder_output1, max_length, lstm_units=vocab_size, name='1')
+        self.decoder_output1 = lstm_decoder_teacher_forced(embedding1, self.encoder_output1, max_length, lstm_units=vocab_size, name='1')
 
         # Build Autoencoder2
-        x2_input = tf.placeholder(tf.int32, [None, None])
-        embedding2 = tf.one_hot(x2_input, vocab_size)
+        self.x2_input = tf.placeholder(tf.int32, [None, None])
+        embedding2 = tf.one_hot(self.x2_input, vocab_size)
 
         self.encoder_output2 = lstm_encoder(embedding2, lstm_units=vocab_size, z_dim=self.z_dim, name='2')
-        decoder_output2 = lstm_decoder_teacher_forced(embedding2, self.encoder_output2, max_length, lstm_units=vocab_size, \
+        self.decoder_output2 = lstm_decoder_teacher_forced(embedding2, self.encoder_output2, max_length, lstm_units=vocab_size, \
                                                         training=False, softmax=True, temperature=self.temperature, name='2')
 
         # Reconstruction Loss
-        self.rec_loss1 = tf.reduce_mean(tf.square(decoder_output1 - embedding1))
-        self.rec_loss2 = tf.reduce_mean(tf.square(decoder_output2 - embedding2))
+        self.rec_loss1 = tf.reduce_mean(tf.square(self.decoder_output1 - embedding1))
+        self.rec_loss2 = tf.reduce_mean(tf.square(self.decoder_output2 - embedding2))
 
         # Define Discrimator
         with tf.variable_scope("adversary") as scope:
@@ -104,13 +110,37 @@ class Aligned_LSTM_Autoencoder:
 
             # Start Training
             for i in range(num_epochs):
-                num_batches = int(self.X.shape[0] / batch_size)
+                num_batches = int(self.X1.shape[0] / batch_size)
                 for b in range(num_batches):
                     x1_batch = self.X1[b * batch_size:(b + 1) * batch_size]
                     x2_batch = self.X2[b * batch_size:(b + 1) * batch_size]
 
                     _, _, summary = sess.run([self.D_train_step, self.G_train_step, self.merged], \
-                                feed_dict={x1_input: x1_batch, x2_input: x2_batch})
+                                feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
+                    
+                    if i % 1 == 0 and b == 0:
+                        D_loss, G_loss = sess.run([self.D_loss, self.G_loss], \
+                                feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
+                        rec_loss1, rec_loss2 = sess.run([self.rec_loss1, self.rec_loss2], \
+                                feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
+                        print("D_loss: {0}\n G_loss: {1}".format(D_loss, G_loss))
+                        print("rec_loss1: {0}\n rec_loss2: {1}".format(rec_loss1, rec_loss2))
+
+			
+                        x_gen_i, x_transfered_i = sess.run([self.decoder_output1, self.decoder_output2], \
+                                feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
+	                x_gen_i = np.argmax(x_gen_i, axis=2)
+	                x_transferred_i = np.argmax(x_transferred_i, axis=2)
+	                
+	                print(i)
+	                num_show = 5
+	                show_idx = np.random.choice(x1_batch.shape[0], size=num_show)
+	                print(textify_samples(x1_batch[show_idx]))
+	                print(textify_samples(x_gen_i[show_idx]))
+			print(textify_samples(x2_batch[show_idx]))
+	                print(textify_samples(x_transferred_i[show_idx]))
+	
+	                saver.save(sess, saved_model_path, global_step=step)
 
                     step += batch_size
 

@@ -79,7 +79,8 @@ def main(argv):
     else:
         X1, X2, classes = one_hot_encode(dataset1, dataset2)
 
-    pickle_dict = {"X1": X1, "X2": X2, "classes": classes}
+    pickle_dict = {"X1": X1[:1000], "X2": X2[:1000], "classes": classes}
+    #pickle_dict = {"X1": X1, "X2": X2, "classes": classes}
     
     pickle_to_path(pickle_dict, pickle_path)
     #except:
