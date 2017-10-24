@@ -11,7 +11,7 @@ import sys
 from autoencoder_utils import *
 
 class Aligned_LSTM_Autoencoder:
-    def __init__(self, learning_rate=0.0001, temperature=0.001, beta1=0.9, beta2=0.9, z_dim=100, lambda_g=1):
+    def __init__(self, learning_rate=0.0001, temperature=0.1, beta1=0.9, beta2=0.9, z_dim=300, lambda_g=1):
         self.learning_rate = learning_rate
         self.beta1 = beta1
         self.beta2 = beta2
@@ -35,12 +35,13 @@ class Aligned_LSTM_Autoencoder:
         embedding2 = tf.one_hot(self.x2_input, vocab_size)
 
         self.encoder_output2 = lstm_encoder(embedding2, lstm_units=vocab_size, z_dim=self.z_dim, name='2')
-        self.decoder_output2 = lstm_decoder_teacher_forced(embedding2, self.encoder_output2, max_length, lstm_units=vocab_size, \
-                                                        training=False, softmax=True, temperature=self.temperature, name='2')
+        self.decoder_output2 = lstm_decoder_teacher_forced(embedding2, self.encoder_output2, max_length, lstm_units=vocab_size, name='2')
 
         # Reconstruction Loss
         self.rec_loss1 = tf.reduce_mean(tf.square(self.decoder_output1 - embedding1))
         self.rec_loss2 = tf.reduce_mean(tf.square(self.decoder_output2 - embedding2))
+        #self.rec_loss1 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=embedding1, logits=self.decoder_output1))
+        #self.rec_loss2 = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=embedding2, logits=self.decoder_output2))
 
         # Define Discrimator
         with tf.variable_scope("adversary") as scope:
@@ -48,10 +49,10 @@ class Aligned_LSTM_Autoencoder:
             logits2 = discriminator(self.encoder_output2, reuse=True)
 
         # Adversarial Loss
-        _, adv_loss = gan_loss(logits1, logits2)
+        gen_loss, adv_loss = gan_loss(logits1, logits2)
         
         # Define losses
-        self.G_loss = (self.rec_loss1 + self.rec_loss2) - tf.scalar_mul(self.lambda_g, (adv_loss))
+        self.G_loss = (self.rec_loss1 + self.rec_loss2) + tf.scalar_mul(self.lambda_g, (gen_loss))
         self.D_loss = adv_loss
 
         #Define optimizers
@@ -116,9 +117,10 @@ class Aligned_LSTM_Autoencoder:
                     x2_batch = self.X2[b * batch_size:(b + 1) * batch_size]
 
                     _, _, summary = sess.run([self.D_train_step, self.G_train_step, self.merged], \
+                    #_, summary = sess.run([self.G_train_step, self.merged], \
                                 feed_dict={self.x1_input: x1_batch, self.x2_input: x2_batch})
                     
-                    train_writer.add_summary(summary, i)
+                    train_writer.add_summary(summary, step)
 
                     # Print statistics every epoch
                     if i % 1 == 0 and b == 0:
@@ -152,8 +154,10 @@ class Aligned_LSTM_Autoencoder:
 ######################
 def main(argv):
     pickle_path = argv[0]
+    num_epochs = int(argv[1])
+
     aae = Aligned_LSTM_Autoencoder()
-    aae.train(pickle_path)
+    aae.train(pickle_path, num_epochs=num_epochs)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
