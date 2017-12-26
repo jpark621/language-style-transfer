@@ -1,6 +1,6 @@
 # Language Style Transfer
 
-![alt text](img/professor-aligned-ae "Aligned-autoencoder")
+![alt text](img/professor-aligned-ae.png "Aligned-autoencoder")
 
 A Tensorflow implementation of [NLP Style Transfer from Non-parallel Text with Adversarial Alignment](https://arxiv.org/abs/1705.09655). Repo applies the work unto Shakespearean works. It provides prototypes for seq2seq models with teacher-enforcement as well as plots of the encoding layer.
 
