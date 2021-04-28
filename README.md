@@ -26,6 +26,16 @@ This will create a model in models/ directory. The model will contain trained we
 ```
 
 ## Citation
+For most cases, please cite the original work
+```
+@misc{1705.09655,
+Author = {Tianxiao Shen and Tao Lei and Regina Barzilay and Tommi Jaakkola},
+Title = {Style Transfer from Non-Parallel Text by Cross-Alignment},
+Year = {2017},
+Eprint = {arXiv:1705.09655},
+}
+```
+
 If you use this implementation of the work, use the following citation:
 ```
 @misc{2017language-style-transfer,
@@ -38,4 +48,4 @@ If you use this implementation of the work, use the following citation:
 ```
 
 ## Authors
-[Jin Park](https://github.com/jpark96) 
+[Jin Park](https://github.com/jpark621) 
